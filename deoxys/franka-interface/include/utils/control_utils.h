@@ -4,6 +4,7 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 #ifndef DEOXYS_FRANKA_INTERFACE_INCLUDE_UTILS_CONTROL_UTILS_H_
 #define DEOXYS_FRANKA_INTERFACE_INCLUDE_UTILS_CONTROL_UTILS_H_
@@ -50,6 +51,21 @@ inline void TorqueSafetyGuardFn(std::array<double, 7> &tau_d_array,
     } else if (tau_d_array[i] > max_torque) {
       tau_d_array[i] = max_torque;
     }
+  }
+}
+
+inline void ClipVectorL2Norm(const Eigen::VectorXd &v, Eigen::VectorXd &v_clipped,
+                             double max_norm, double epsilon = 0.0000001)
+{
+  v_clipped.setZero(); // Should not be needed
+  if (max_norm < 0){
+    throw std::runtime_error("Argument 'max_norm` must be non-negative");
+  } else if (max_norm < epsilon) {
+    v_clipped << 0 * v;
+  } else {
+    double norm = v.norm();
+    double coef = max_norm / std::max(norm, max_norm);
+    v_clipped << coef * v;
   }
 }
 

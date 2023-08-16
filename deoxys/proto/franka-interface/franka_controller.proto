@@ -92,6 +92,8 @@ message FrankaOSCPoseControllerMessage {
   repeated double rotational_stiffness = 3;
   bool termination = 4;
   FrankaOSCControllerConfig config = 5;
+  double translational_stiffness_max_force = 6;
+  double rotational_stiffness_max_torque = 7;
 }
 
 message FrankaJointPositionControllerMessage {

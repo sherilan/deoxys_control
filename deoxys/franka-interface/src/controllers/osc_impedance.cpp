@@ -68,6 +68,8 @@ bool OSCImpedanceController::ParseMessage(const FrankaControlMessage &msg) {
       residual_mass_array.data());
 
   this->state_estimator_ptr_->ParseMessage(msg.state_estimator_msg());
+  this->translational_stiffness_max_force_ = control_msg_.translational_stiffness_max_force();
+  this->rotational_stiffness_max_torque_ = control_msg_.rotational_stiffness_max_torque();
 
   return true;
 }
@@ -209,12 +211,29 @@ std::array<double, 7> OSCImpedanceController::Step(
   ori_error =
       ori_error.unaryExpr([](double x) { return (abs(x) < 5e-3) ? 0. : x; });
 
-  tau_d << jacobian_pos.transpose() *
-                   (Lambda_pos *
-                    (Kp_p * pos_error - Kd_p * (jacobian_pos * current_dq))) +
-               jacobian_ori.transpose() *
-                   (Lambda_ori *
-                    (Kp_r * ori_error - Kd_r * (jacobian_ori * current_dq)));
+  
+  // Compute and clip task stiffness force / torque 
+  Eigen::VectorXd task_stiffness_force_clipped(3);
+  Eigen::VectorXd task_stiffness_torque_clipped(3);
+  control_utils::ClipVectorL2Norm(Kp_p * pos_error, 
+                                  task_stiffness_force_clipped,
+                                  std::max(0.0, translational_stiffness_max_force_));
+  control_utils::ClipVectorL2Norm(Kp_r * ori_error, 
+                                  task_stiffness_torque_clipped, 
+                                  std::max(0.0, rotational_stiffness_max_torque_));
+
+
+  // Compute task damping force/torque 
+  Eigen::VectorXd task_damping_force = Kd_p * (jacobian_pos * current_dq);
+  Eigen::VectorXd task_damping_torque = Kd_r * (jacobian_ori * current_dq);
+
+  // Combine into total task force/torque 
+  Eigen::VectorXd task_force = task_stiffness_force_clipped - task_damping_force;
+  Eigen::VectorXd task_torque = task_stiffness_torque_clipped - task_damping_torque;
+
+  // Map to joint space 
+  tau_d << jacobian_pos.transpose() * (Lambda_pos * task_force) +
+           jacobian_ori.transpose() * (Lambda_ori * task_torque);
 
   // nullspace control
   tau_d << tau_d + Nullspace * (static_q_task_ - current_q);

@@ -20,6 +20,9 @@ protected:
   Eigen::Array<double, 7, 1> joint_min_;
   Eigen::Array<double, 7, 1> avoidance_weights_;
 
+  double translational_stiffness_max_force_ = 0;
+  double rotational_stiffness_max_torque_ = 0;
+
 public:
   OSCImpedanceController();
   OSCImpedanceController(franka::Model &model);
