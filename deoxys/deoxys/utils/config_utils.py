@@ -148,6 +148,16 @@ def verify_controller_config(controller_cfg: dict, use_default=True):
                 ] * 3
         assert len(controller_cfg["Kp"]["translation"]) == 3
         assert len(controller_cfg["Kp"]["rotation"]) == 3
+        # Stiffness max force/torque
+        if not check_attr(controller_cfg, "translational_stiffness_max_force"):
+            controller_cfg["translational_stiffness_max_force"] = 5 
+            logger.warning("translational stiffness max force is not specified!!!")
+            field_missing = True 
+        if not check_attr(controller_cfg, "rotational_stiffness_max_torque"):
+            controller_cfg["rotational_stiffness_max_torque"] = 20
+            logger.warning("rotational stiffness max torque is not specified!!!")
+            field_missing = True 
+
         # Trajectory interpolation
         if not check_attr(controller_cfg, "traj_interpolator_cfg"):
             controller_cfg["traj_interpolator_cfg"] = {

@@ -3,7 +3,7 @@ Numba utils.
 """
 import numba
 
-ENABLE_NUMBA = True
+ENABLE_NUMBA = False
 CACHE_NUMBA = True
 
 

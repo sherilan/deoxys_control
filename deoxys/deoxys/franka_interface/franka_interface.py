@@ -257,6 +257,8 @@ class FrankaInterface:
             osc_msg = franka_controller_pb2.FrankaOSCPoseControllerMessage()
             osc_msg.translational_stiffness[:] = controller_cfg.Kp.translation
             osc_msg.rotational_stiffness[:] = controller_cfg.Kp.rotation
+            osc_msg.translational_stiffness_max_force = controller_cfg.translational_stiffness_max_force
+            osc_msg.rotational_stiffness_max_torque = controller_cfg.rotational_stiffness_max_torque
 
             osc_config = franka_controller_pb2.FrankaOSCControllerConfig()
 
